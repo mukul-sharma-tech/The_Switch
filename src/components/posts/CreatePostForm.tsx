@@ -13,12 +13,15 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2, Send } from 'lucide-react';
 
 type Gender = "male" | "female" | "trans" | "other" | "common";
+type Space = Gender | "anonymous";
 
 interface CreatePostFormProps {
   onPostCreated?: (post: { _id: string; text: string; photo?: string; video?: string; topics: string[]; tags: string[]; space: string; author: { _id: string; name: string; username: string; profileImage?: string; }; createdAt: string; }) => void;
+  communitySlug?: string; // If provided, post will be created in this community
+  hideSpaceSelector?: boolean; // Hide space selector when posting to community
 }
 
-export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
+export function CreatePostForm({ onPostCreated, communitySlug, hideSpaceSelector = false }: CreatePostFormProps) {
   const { data: session } = useSession();
 
   const [text, setText] = useState('');
@@ -26,13 +29,13 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
   const [tags, setTags] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [space, setSpace] = useState<Gender>('common');
+  const [space, setSpace] = useState<Space>('common');
 
   const userGender = session?.user?.gender as Gender;
-  const availableSpaces =
+  const availableSpaces: Space[] =
     userGender && userGender !== 'common' && userGender !== 'other'
-      ? ['common', userGender]
-      : ['common'];
+      ? ['common', userGender, 'anonymous']
+      : ['common', 'anonymous'];
 
   const resetForm = () => {
     setText('');
@@ -96,7 +99,12 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
         space, // Ensure the 'space' state is included in the body
       };
 
-      const res = await fetch('/api/posts', {
+      // If posting to a community, use the community posts endpoint
+      const endpoint = communitySlug 
+        ? `/api/communities/${communitySlug}/posts`
+        : '/api/posts';
+
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -135,19 +143,21 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
             disabled={isSubmitting}
           />
 
-          {availableSpaces.length > 1 && (
+          {!hideSpaceSelector && availableSpaces.length > 1 && (
             <div>
               <Label>Choose a Space</Label>
               <RadioGroup
                 value={space}
-                onValueChange={(value) => setSpace(value as Gender)}
+                onValueChange={(value) => setSpace(value as Space)}
                 className="flex items-center gap-4 mt-2"
                 disabled={isSubmitting}
               >
                 {availableSpaces.map((s) => (
                   <div key={s} className="flex items-center space-x-2">
                     <RadioGroupItem value={s} id={s} />
-                    <Label htmlFor={s} className="capitalize font-normal cursor-pointer">{s}</Label>
+                    <Label htmlFor={s} className="capitalize font-normal cursor-pointer">
+                      {s === 'anonymous' ? 'Anonymous (The Forum)' : s}
+                    </Label>
                   </div>
                 ))}
               </RadioGroup>

@@ -29,7 +29,8 @@ export async function POST(request: NextRequest) {
     }
 
     const requestedSpace = space || 'common';
-    if (requestedSpace !== 'common' && requestedSpace !== authorGender) {
+    // Allow posting in anonymous space for all users, or in common space, or in user's own gender space
+    if (requestedSpace !== 'common' && requestedSpace !== 'anonymous' && requestedSpace !== authorGender) {
         return NextResponse.json({ message: `You are not permitted to post in the '${requestedSpace}' space.` }, { status: 403 });
     }
 

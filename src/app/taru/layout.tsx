@@ -10,6 +10,7 @@ import {
   MessageCircle,
   LogOut,
   BrainCircuit,
+  Users,
 } from "lucide-react"
 import { UploadModal } from "@/components/posts/UploadModal"
 import { SearchModal } from "@/components/modals/SearchModal"
@@ -31,6 +32,7 @@ export default async function DashboardLayout({
       icon: User,
       label: "Profile",
     },
+    { href: "/communities", icon: Users, label: "Communities" },
     { href: "/chat", icon: MessageCircle, label: "Chat" },
     { href: "/taru", icon: BrainCircuit, label: "Taru AI" },
   ]

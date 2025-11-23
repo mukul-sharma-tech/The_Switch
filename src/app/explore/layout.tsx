@@ -99,9 +99,11 @@ import {
   MessageCircle,
   LogOut,
   BrainCircuit,
+  Users,
 } from "lucide-react"
 import { UploadModal } from "@/components/posts/UploadModal"
 import { SearchModal } from "@/components/modals/SearchModal"
+import { CommunitiesSidebar } from "@/components/communities/CommunitiesSidebar"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -120,6 +122,7 @@ export default async function DashboardLayout({
       icon: User,
       label: "Profile",
     },
+    { href: "/communities", icon: Users, label: "Communities" },
     { href: "/chat", icon: MessageCircle, label: "Chat" },
     { href: "/taru", icon: BrainCircuit, label: "Taru AI" },
   ]
@@ -168,6 +171,11 @@ export default async function DashboardLayout({
               <UploadModal variant="desktop" />
 
             </nav>
+
+            {/* Communities Section */}
+            <div className="mt-6 pt-6 border-t">
+              <CommunitiesSidebar />
+            </div>
           </ScrollArea>
         </div>
 

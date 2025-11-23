@@ -322,6 +322,7 @@ interface DetailedPost {
   savedBy: string[];
   comments: Comment[];
   createdAt: string;
+  space?: string;
 }
 
 interface PostDetailModalProps {
@@ -364,6 +365,8 @@ export function PostDetailModal({ posts, startIndex, isOpen, onClose, onPostUpda
   const currentUserId = (session?.user as { id?: string })?.id;
   const isLiked = currentUserId ? currentPost.likes.includes(currentUserId) : false;
   const isSaved = currentUserId ? currentPost.savedBy?.includes(currentUserId) : false;
+  const isAnonymous = (currentPost as any).space === 'anonymous';
+  const shouldShowAnonymous = isAnonymous || readOnly;
 
   const optimisticUpdate = (action: 'like' | 'save' | 'comment', payload?: Comment) => {
     // const updatedPost = { ...currentPost };
@@ -494,9 +497,9 @@ export function PostDetailModal({ posts, startIndex, isOpen, onClose, onPostUpda
 
         <div className={`flex flex-col p-4 bg-card ${hasMedia ? 'md:rounded-r-lg' : 'rounded-lg'}`}>
           <div className="flex items-center gap-3 border-b pb-4">
-            <Avatar><AvatarImage src={readOnly ? undefined : currentPost.author?.profileImage} /><AvatarFallback>{readOnly ? 'A' : (currentPost.author?.name ? currentPost.author.name[0].toUpperCase() : 'U')}</AvatarFallback></Avatar>
+            <Avatar><AvatarImage src={shouldShowAnonymous ? undefined : currentPost.author?.profileImage} /><AvatarFallback>{shouldShowAnonymous ? 'A' : (currentPost.author?.name ? currentPost.author.name[0].toUpperCase() : 'U')}</AvatarFallback></Avatar>
             <div>
-              {readOnly ? (
+              {shouldShowAnonymous ? (
                 <p className="font-semibold text-foreground">Anonymous</p>
               ) : (
                 <Link href={currentPost.author?.username ? `/profile/${currentPost.author.username}` : '#'} className="font-semibold text-foreground hover:underline">
@@ -520,12 +523,12 @@ export function PostDetailModal({ posts, startIndex, isOpen, onClose, onPostUpda
                   comment && comment.author && (
                     <div key={comment._id} className="flex items-start gap-3 text-sm">
                       <Avatar className="w-8 h-8">
-                        <AvatarImage src={readOnly ? undefined : comment.author.profileImage} />
-                        <AvatarFallback>{readOnly ? 'A' : (comment.author.name ? comment.author.name[0].toUpperCase() : '?')}</AvatarFallback>
+                        <AvatarImage src={shouldShowAnonymous ? undefined : comment.author.profileImage} />
+                        <AvatarFallback>{shouldShowAnonymous ? 'A' : (comment.author.name ? comment.author.name[0].toUpperCase() : '?')}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
                         <p className="text-foreground">
-                          {readOnly ? (
+                          {shouldShowAnonymous ? (
                             <span className="font-semibold mr-2">Anonymous</span>
                           ) : (
                             <Link href={comment.author.username ? `/profile/${comment.author.username}` : '#'} className="font-semibold mr-2 hover:underline">

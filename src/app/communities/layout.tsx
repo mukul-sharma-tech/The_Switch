@@ -1,4 +1,3 @@
-
 import Link from "next/link"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/authOptions"
@@ -14,10 +13,11 @@ import {
 } from "lucide-react"
 import { UploadModal } from "@/components/posts/UploadModal"
 import { SearchModal } from "@/components/modals/SearchModal"
+import { CommunitiesSidebar } from "@/components/communities/CommunitiesSidebar"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
 
-export default async function DashboardLayout({
+export default async function CommunitiesLayout({
   children,
 }: {
   children: React.ReactNode
@@ -70,17 +70,14 @@ export default async function DashboardLayout({
               </div>
 
               {/* Upload */}
-              {/* <div
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium cursor-pointer transition-colors",
-                  "hover:bg-primary/10 hover:text-primary"
-                )}
-              >
-                <UploadModal variant="desktop" />
-              </div> */}
               <UploadModal variant="desktop" />
 
             </nav>
+
+            {/* Communities Section */}
+            <div className="mt-6 pt-6 border-t">
+              <CommunitiesSidebar />
+            </div>
           </ScrollArea>
         </div>
 
@@ -147,3 +144,4 @@ export default async function DashboardLayout({
     </div>
   )
 }
+

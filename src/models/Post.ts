@@ -12,6 +12,9 @@ const PostSchema = new Schema({
   tags: [{ type: String }],    // e.g., ['fun', 'morning', 'travel']
 
   space: { type: String, default: 'common' },
+  
+  // Community reference (if post belongs to a community)
+  community: { type: mongoose.Schema.Types.ObjectId, ref: 'Community', default: null },
 
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   comments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }],

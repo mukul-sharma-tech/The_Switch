@@ -31,6 +31,9 @@ const UserSchema = new Schema({
 
   conversations: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Conversation' }],
 
+  // Communities
+  communities: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Community' }], // Communities user has joined
+  createdCommunities: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Community' }], // Communities user created
 
 }, { timestamps: true });
 
