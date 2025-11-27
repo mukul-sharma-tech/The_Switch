@@ -1,3 +1,4 @@
+flask
 flask-cors
 python-dotenv
 gunicorn
@@ -12,4 +13,3 @@ numpy
 pandas
 xgboost
 scikit-learn
-google-generativeai
