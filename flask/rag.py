@@ -46,7 +46,7 @@ class TaruRAG:
     def __init__(self, documents: List[Document], api_key: str):
         self.documents = documents
         self.llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash-latest",
+            model="gemini-2.5-flash",
             temperature=0.3,
             google_api_key=api_key,
             convert_system_message_to_human=True,

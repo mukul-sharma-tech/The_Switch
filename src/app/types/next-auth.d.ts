@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+/// <reference types="next-auth" />
 
 declare module "next-auth" {
   interface Session {
@@ -7,28 +7,23 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
-      gender?: "male" | "female" | "other"; // or your Gender enum/type
+      gender?: "male" | "female" | "trans" | "other"; // or your Gender enum/type
       username?: string;
-    };
+    } & DefaultSession["user"]
   }
 
   interface User {
     id: string;
-    gender?: "male" | "female" | "other"; // match your User model
+    gender?: "male" | "female" | "trans" | "other"; // match your User model
     username?: string;
   }
-  interface Post {
-  _id: string;
-  text: string;
-  photo?: string;
-  video?: string;
-  createdAt: string;
-  author: Author;
-  likes: string[];
-  savedBy: string[];
-  comments: Comment[];
-  topics?: string[]; // add optional fields
-  tags?: string[];
 }
 
+declare module "next-auth/jwt" {
+  interface JWT {
+    id?: string;
+    gender?: "male" | "female" | "trans" | "other";
+    username?: string;
+  }
 }
+

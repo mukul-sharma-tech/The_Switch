@@ -1,7 +1,8 @@
 
 import Link from "next/link"
-import { getServerSession } from "next-auth"
+import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/authOptions"
+import type { Session } from "next-auth"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
@@ -14,6 +15,7 @@ import {
 } from "lucide-react"
 import { UploadModal } from "@/components/posts/UploadModal"
 import { SearchModal } from "@/components/modals/SearchModal"
+import { CommunitiesSidebar } from "@/components/communities/CommunitiesSidebar"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -22,8 +24,8 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const session = await getServerSession(authOptions)
-  const username = session?.user?.username
+  const session = await getServerSession(authOptions) as Session | null
+  const username = (session?.user as { username?: string })?.username
 
   const navItems = [
     { href: "/explore", icon: Home, label: "Feed" },
@@ -81,6 +83,11 @@ export default async function DashboardLayout({
               <UploadModal variant="desktop" />
 
             </nav>
+
+            {/* Communities Section */}
+            <div className="mt-6 pt-6 border-t">
+              <CommunitiesSidebar />
+            </div>
           </ScrollArea>
         </div>
 

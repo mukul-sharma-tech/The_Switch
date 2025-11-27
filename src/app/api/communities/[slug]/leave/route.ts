@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from "@/lib/authOptions";
 import { connectToDB } from '@/lib/mongodb';
 import { Community } from '@/models/Community';
 import { User } from '@/models/User';
+import type { Session } from 'next-auth';
 
 // Leave a community
 export async function POST(
@@ -11,7 +12,7 @@ export async function POST(
   context: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await context.params;
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions) as Session | null;
   
   if (!session?.user?.id) {
     return NextResponse.json({ message: 'Not Authorized' }, { status: 401 });
@@ -32,19 +33,20 @@ export async function POST(
     }
 
     // Check if user is a member
-    if (!community.members.includes(session.user.id as any)) {
+    const userIdString = session.user.id;
+    if (!community.members.some((memberId: { toString(): string }) => memberId.toString() === userIdString)) {
       return NextResponse.json({ message: 'You are not a member of this community' }, { status: 400 });
     }
 
     // Remove user from members
     community.members = community.members.filter(
-      (memberId: any) => memberId.toString() !== session.user.id
+      (memberId: { toString(): string }) => memberId.toString() !== userIdString
     );
     community.memberCount = community.members.length;
     
     // Remove from moderators if present
     community.moderators = community.moderators.filter(
-      (modId: any) => modId.toString() !== session.user.id
+      (modId: { toString(): string }) => modId.toString() !== userIdString
     );
     
     await community.save();

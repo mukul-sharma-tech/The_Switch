@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from "@/lib/authOptions";
 import { connectToDB } from '@/lib/mongodb';
 import { Post } from '@/models/Post';
 import { User } from '@/models/User';
 import { Comment } from '@/models/Comment';
+import type { Session } from 'next-auth';
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id || !session.user.gender) {
+  const session = await getServerSession(authOptions) as Session | null;
+  if (!session?.user?.id || !(session.user as { gender?: string }).gender) {
     return NextResponse.json({ message: 'Not Authorized or session is missing user data' }, { status: 401 });
   }
+
+  const authorId = (session.user as { id: string }).id;
+  const authorGender = (session.user as { gender: string }).gender;
 
   await connectToDB();
 
@@ -21,8 +25,6 @@ export async function POST(request: NextRequest) {
     console.log("--- RECEIVED REQUEST BODY ---", body);
 
     const { text, photo, video, topics, tags, space } = body;
-    const authorId = session.user.id;
-    const authorGender = session.user.gender;
     
     if (!text && !photo && !video) {
         return NextResponse.json({ message: 'Post must contain text, a photo, or a video.' }, { status: 400 });

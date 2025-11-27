@@ -358,6 +358,7 @@
 'use client';
 
 import { useSession } from "next-auth/react";
+import type { Session } from "next-auth";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { toast } from "sonner";
@@ -433,6 +434,7 @@ const PostCard = ({ post, onClick }: { post: Post, onClick: () => void }) => {
 // --- MAIN DYNAMIC PROFILE PAGE COMPONENT ---
 export default function ProfilePage() {
   const { data: session, status: sessionStatus, update } = useSession();
+  const typedSession = session as Session | null;
   
   const [profile, setProfile] = useState<ProfileUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -467,8 +469,8 @@ export default function ProfilePage() {
         const normalizedUsername = username.trim();
         const fetchPromises = [fetch(`/api/users/username/${encodeURIComponent(normalizedUsername)}`)];
 
-        if (session?.user?.id) {
-          fetchPromises.push(fetch(`/api/users/${session.user.id}`));
+        if (typedSession?.user?.id) {
+          fetchPromises.push(fetch(`/api/users/${typedSession.user.id}`));
         }
 
         const [profileRes, sessionUserRes] = await Promise.all(fetchPromises);
@@ -482,13 +484,13 @@ export default function ProfilePage() {
           setSessionUserProfile(sessionUserData);
         }
 
-        const isOwn = session?.user?.id === profileData._id;
+        const isOwn = typedSession?.user?.id === profileData._id;
         setIsOwnProfile(isOwn);
         
         if (isOwn) {
           setFormData({ name: profileData.name, username: profileData.username, bio: profileData.bio || "", interests: profileData.interests || [] });
-        } else if (session?.user?.id) {
-          const isUserFollowing = profileData.followers.some(follower => follower._id === session.user.id);
+        } else if (typedSession?.user?.id) {
+          const isUserFollowing = profileData.followers.some(follower => follower._id === typedSession.user.id);
           setIsFollowing(isUserFollowing);
         }
 
@@ -502,7 +504,7 @@ export default function ProfilePage() {
     };
     if (sessionStatus !== 'loading') { fetchAllData(); }
   // Use the unwrapped 'username' variable in the dependency array
-  }, [username, sessionStatus, session?.user?.id]);
+  }, [username, sessionStatus, typedSession?.user?.id]);
 
   const handleFollowToggle = async (targetUserId: string, source: 'profile' | 'modal') => {
     if (!session) { toast.error("Please log in to follow users."); return; }
@@ -701,7 +703,7 @@ export default function ProfilePage() {
           onClose={() => setModalContent(null)}
           title={modalContent.title}
           users={modalContent.users}
-          currentUserId={session?.user?.id}
+          currentUserId={typedSession?.user?.id}
           sessionUserFollowing={sessionUserProfile?.following.map(u => u._id) || []}
           onFollowToggle={(userId) => handleFollowToggle(userId, 'modal')}
         />

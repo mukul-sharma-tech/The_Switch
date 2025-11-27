@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from "@/lib/authOptions";
 import { connectToDB } from "@/lib/mongodb";
 import { User } from '@/models/User';
+import type { Session } from 'next-auth';
 
 export async function POST(
   request: NextRequest,
@@ -10,12 +11,12 @@ export async function POST(
 ) {
   const { id: targetUserId } = await context.params; // <-- unwrap Promise
 
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions) as Session | null;
   if (!session?.user?.id) {
     return NextResponse.json({ message: 'Not Authorized' }, { status: 401 });
   }
 
-  const currentUserId = session.user.id;
+  const currentUserId = (session.user as { id: string }).id;
 
   if (currentUserId === targetUserId) {
     return NextResponse.json({ message: "You cannot follow yourself" }, { status: 400 });

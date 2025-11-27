@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CreateCommunityModal } from '@/components/communities/CreateCommunityModal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -105,10 +104,10 @@ export default function CommunitiesPage() {
             : c
         ));
       } else {
-        const error = await res.json();
-        toast.error(error.message || 'Failed to join community');
+        const errorData = await res.json();
+        toast.error(errorData.message || 'Failed to join community');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to join community');
     } finally {
       setJoiningIds(prev => {
@@ -233,6 +232,7 @@ export default function CommunitiesPage() {
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
                           {community.icon ? (
+                            // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={community.icon}
                               alt={community.name}
@@ -326,7 +326,7 @@ export default function CommunitiesPage() {
             {joinedCommunities.length === 0 ? (
               <Card>
                 <CardContent className="p-8 text-center text-muted-foreground">
-                  You haven't joined any communities yet. Discover communities above!
+                  You haven&apos;t joined any communities yet. Discover communities above!
                 </CardContent>
               </Card>
             ) : (
@@ -340,6 +340,7 @@ export default function CommunitiesPage() {
                     <CardHeader>
                       <div className="flex items-center gap-3">
                         {community.icon ? (
+                          // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={community.icon}
                             alt={community.name}

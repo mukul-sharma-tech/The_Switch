@@ -1,5 +1,5 @@
 // import { NextRequest, NextResponse } from 'next/server';
-// import { getServerSession } from 'next-auth';
+// import { getServerSession } from 'next-auth/next';
 // import { authOptions } from "@/lib/authOptions";
 // import { connectToDB } from "@/lib/mongodb";
 // import { Post } from '@/models/Post';
@@ -38,11 +38,12 @@
 // }
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from "@/lib/authOptions";
 import { connectToDB } from "@/lib/mongodb";
 import { Post } from '@/models/Post';
 import { User } from '@/models/User';
+import type { Session } from 'next-auth';
 
 export async function POST(
   request: NextRequest,
@@ -50,12 +51,13 @@ export async function POST(
 ) {
   const { postId } = await context.params; // <-- unwrap Promise
 
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ message: 'Not Authorized' }, { status: 401 });
+  const session = await getServerSession(authOptions) as Session | null;
+  if (!session?.user?.id) return NextResponse.json({ message: 'Not Authorized' }, { status: 401 });
+
+  const userId = (session.user as { id: string }).id;
 
   await connectToDB();
   try {
-    const userId = session.user.id;
 
     const user = await User.findById(userId);
     const post = await Post.findById(postId);

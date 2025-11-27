@@ -1,12 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from "@/lib/authOptions";
 import { connectToDB } from '@/lib/mongodb';
 import { Community } from '@/models/Community';
+import type { Session } from 'next-auth';
 
 // Get all communities the user has joined
-export async function GET(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+export async function GET() {
+  const session = await getServerSession(authOptions) as Session | null;
   if (!session?.user?.id) {
     return NextResponse.json({ message: 'Not Authorized' }, { status: 401 });
   }

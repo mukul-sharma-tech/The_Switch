@@ -90,6 +90,7 @@ export function CommunitiesSidebar() {
                   )}
                 >
                   {community.icon ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={community.icon}
                       alt={community.name}

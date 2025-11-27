@@ -37,7 +37,7 @@ const TaruAIPage = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const API_BASE = process.env.NEXT_PUBLIC_TARU_API_URL || 'http://localhost:8000';
+  const API_BASE = process.env.NEXT_PUBLIC_TARU_API_URL || 'https://the-switch.onrender.com';
 
   const checkApiHealth = useCallback(async () => {
     setApiStatus('checking');

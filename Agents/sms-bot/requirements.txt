@@ -1,4 +1,7 @@
-python-telegram-bot==20.6
+flask
+twilio
+python-dotenv
 langchain
 langchain-google-genai
+langchain-communitynai
 python-dotenv

@@ -365,7 +365,7 @@ export function PostDetailModal({ posts, startIndex, isOpen, onClose, onPostUpda
   const currentUserId = (session?.user as { id?: string })?.id;
   const isLiked = currentUserId ? currentPost.likes.includes(currentUserId) : false;
   const isSaved = currentUserId ? currentPost.savedBy?.includes(currentUserId) : false;
-  const isAnonymous = (currentPost as any).space === 'anonymous';
+  const isAnonymous = currentPost.space === 'anonymous';
   const shouldShowAnonymous = isAnonymous || readOnly;
 
   const optimisticUpdate = (action: 'like' | 'save' | 'comment', payload?: Comment) => {

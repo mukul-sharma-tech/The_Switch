@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
+import type { Session } from 'next-auth';
 import { toast } from 'sonner';
 import { upload } from '@imagekit/next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,7 +32,8 @@ export function CreatePostForm({ onPostCreated, communitySlug, hideSpaceSelector
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [space, setSpace] = useState<Space>('common');
 
-  const userGender = session?.user?.gender as Gender;
+  const typedSession = session as Session | null;
+  const userGender = typedSession?.user?.gender as Gender | undefined;
   const availableSpaces: Space[] =
     userGender && userGender !== 'common' && userGender !== 'other'
       ? ['common', userGender, 'anonymous']

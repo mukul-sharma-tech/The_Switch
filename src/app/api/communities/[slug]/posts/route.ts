@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from "@/lib/authOptions";
 import { connectToDB } from '@/lib/mongodb';
 import mongoose from 'mongoose';
@@ -7,6 +7,7 @@ import { Community } from '@/models/Community';
 import { Post } from '@/models/Post';
 import { User } from '@/models/User';
 import { Comment } from '@/models/Comment';
+import type { Session } from 'next-auth';
 
 // Get posts in a community
 export async function GET(
@@ -25,7 +26,7 @@ export async function GET(
 
     // Query posts by community field - use both community._id and community.posts array
     // First try using the community's posts array (more reliable)
-    let posts = [];
+    let posts: unknown[] = [];
     
     if (community.posts && community.posts.length > 0) {
       // Query posts by their IDs from the community's posts array
@@ -53,12 +54,20 @@ export async function GET(
     
     // Merge and deduplicate posts
     const allPosts = [...posts, ...postsByCommunityField];
-    const uniquePosts = allPosts.filter((post, index, self) => 
-      index === self.findIndex((p) => p._id.toString() === post._id.toString())
-    );
+    const uniquePosts = allPosts.filter((post, index, self) => {
+      const postWithId = post as { _id: { toString(): string } };
+      return index === self.findIndex((p) => {
+        const pWithId = p as { _id: { toString(): string } };
+        return pWithId._id.toString() === postWithId._id.toString();
+      });
+    });
     
     // Sort by creation date
-    uniquePosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    uniquePosts.sort((a, b) => {
+      const aWithDate = a as { createdAt: string | Date };
+      const bWithDate = b as { createdAt: string | Date };
+      return new Date(bWithDate.createdAt).getTime() - new Date(aWithDate.createdAt).getTime();
+    });
 
     console.log(`Found ${uniquePosts.length} posts for community ${community.name} (${community.slug})`);
     console.log(`- From posts array: ${posts.length}`);
@@ -77,11 +86,13 @@ export async function POST(
   context: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await context.params;
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions) as Session | null;
   
   if (!session?.user?.id) {
     return NextResponse.json({ message: 'Not Authorized' }, { status: 401 });
   }
+
+  const userId = session.user.id;
 
   await connectToDB();
 
@@ -93,9 +104,13 @@ export async function POST(
     }
 
     // Check if user is a member
-    const isMember = community.members.includes(session.user.id as any);
-    const isCreator = community.creator.toString() === session.user.id;
-    const isModerator = community.moderators.includes(session.user.id as any);
+    const isMember = community.members.some((memberId: unknown) => {
+      return (memberId as { toString(): string }).toString() === userId;
+    });
+    const isCreator = community.creator.toString() === userId;
+    const isModerator = community.moderators.some((modId: unknown) => {
+      return (modId as { toString(): string }).toString() === userId;
+    });
 
     if (!isMember && !isCreator) {
       return NextResponse.json({ message: 'You must be a member to post in this community' }, { status: 403 });
@@ -114,7 +129,7 @@ export async function POST(
     }
 
     const newPost = new Post({
-      author: session.user.id,
+      author: userId,
       text,
       photo,
       video,
@@ -136,7 +151,7 @@ export async function POST(
     console.log(`Updated community ${community.slug} with post count: ${community.postCount}`);
 
     // Add post to user's posts
-    await User.findByIdAndUpdate(session.user.id, {
+    await User.findByIdAndUpdate(userId, {
       $push: { posts: newPost._id }
     });
 

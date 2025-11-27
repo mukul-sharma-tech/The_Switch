@@ -17,10 +17,30 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Loader2 } from 'lucide-react';
 
+interface Community {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  category?: string;
+  interests?: string[];
+  isPublic?: boolean;
+  memberCount?: number;
+  postCount?: number;
+  coverImage?: string;
+  icon?: string;
+  creator?: {
+    _id: string;
+    name: string;
+    username: string;
+    profileImage?: string;
+  };
+}
+
 interface CreateCommunityModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCommunityCreated: (community: any) => void;
+  onCommunityCreated: (community: Community) => void;
 }
 
 export function CreateCommunityModal({
@@ -89,8 +109,9 @@ export function CreateCommunityModal({
         allowMemberPosts: true,
       });
       onClose();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to create community');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create community';
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

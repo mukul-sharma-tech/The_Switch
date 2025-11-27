@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 // It's best practice to have authOptions in a central file like /lib
 import { authOptions } from "@/lib/authOptions";
 import { connectToDB } from "@/lib/mongodb";
 import { User } from '@/models/User';
 import { Post } from '@/models/Post'; // ✅ 1. IMPORT THE POST MODEL
+import type { Session } from 'next-auth';
 
 /**
  * @route   GET /api/users/[id]
@@ -66,9 +67,15 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions) as Session | null;
 
-  if (!session || session.user?.id !== id) {
+  const sessionUser = session?.user as { id?: string } | undefined;
+  if (!sessionUser?.id) {
+    return NextResponse.json({ message: 'Not Authorized' }, { status: 403 });
+  }
+
+  const userId = sessionUser.id;
+  if (userId !== id) {
     return NextResponse.json({ message: 'Not Authorized' }, { status: 403 });
   }
 

@@ -1,6 +1,7 @@
 import Link from "next/link"
-import { getServerSession } from "next-auth"
+import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/authOptions"
+import type { Session } from "next-auth"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
@@ -22,8 +23,8 @@ export default async function CommunitiesLayout({
 }: {
   children: React.ReactNode
 }) {
-  const session = await getServerSession(authOptions)
-  const username = session?.user?.username
+  const session = await getServerSession(authOptions) as Session | null
+  const username = (session?.user as { username?: string })?.username
 
   const navItems = [
     { href: "/explore", icon: Home, label: "Feed" },

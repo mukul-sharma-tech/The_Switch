@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from "@/lib/authOptions";
 import { connectToDB } from '@/lib/mongodb';
 import { Community } from '@/models/Community';
 import { User } from '@/models/User';
+import type { Session } from 'next-auth';
 
 // Create a new community
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions) as Session | null;
   if (!session?.user?.id) {
     return NextResponse.json({ message: 'Not Authorized' }, { status: 401 });
   }
+
+  const userId = session.user.id;
 
   await connectToDB();
 
@@ -40,8 +43,8 @@ export async function POST(request: NextRequest) {
       name: name.trim(),
       description: description?.trim() || '',
       slug,
-      creator: session.user.id,
-      members: [session.user.id], // Creator is automatically a member
+      creator: userId,
+      members: [userId], // Creator is automatically a member
       category: category || 'general',
       interests: interests || [],
       isPublic: isPublic !== undefined ? isPublic : true,
@@ -54,7 +57,7 @@ export async function POST(request: NextRequest) {
     await newCommunity.save();
 
     // Add community to user's createdCommunities and communities
-    await User.findByIdAndUpdate(session.user.id, {
+    await User.findByIdAndUpdate(userId, {
       $push: { 
         createdCommunities: newCommunity._id,
         communities: newCommunity._id
@@ -66,9 +69,9 @@ export async function POST(request: NextRequest) {
       .lean();
 
     return NextResponse.json(populatedCommunity, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating community:', error);
-    if (error.code === 11000) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {
       return NextResponse.json({ message: 'A community with this name already exists' }, { status: 400 });
     }
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
@@ -86,7 +89,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
     const isPublic = searchParams.get('isPublic');
 
-    let query: any = {};
+    const query: Record<string, unknown> = {};
 
     if (category) {
       query.category = category;

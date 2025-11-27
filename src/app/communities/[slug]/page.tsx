@@ -54,7 +54,7 @@ interface Post {
   topics: string[];
   tags: string[];
   likes: string[];
-  comments: any[];
+  comments: unknown[];
   savedBy: string[];
   createdAt: string;
   space?: string;
@@ -78,6 +78,7 @@ export default function CommunityPage() {
       fetchCommunity();
       fetchPosts();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.slug, session]);
 
   const fetchCommunity = async () => {
@@ -86,14 +87,15 @@ export default function CommunityPage() {
       if (res.ok) {
         const data = await res.json();
         setCommunity(data);
+        const userId = (session?.user as { id?: string })?.id;
         setIsMember(
-          data.members?.some((m: any) => m._id === session?.user?.id) || false
+          data.members?.some((m: { _id: string }) => m._id === userId) || false
         );
-        setIsCreator(data.creator?._id === session?.user?.id);
+        setIsCreator(data.creator?._id === userId);
       } else {
         toast.error('Community not found');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to load community');
     } finally {
       setIsLoading(false);
@@ -112,8 +114,7 @@ export default function CommunityPage() {
         console.error('Error fetching posts:', errorData);
         toast.error('Failed to load posts');
       }
-    } catch (error) {
-      console.error('Error fetching posts:', error);
+    } catch {
       toast.error('Failed to load posts');
     }
   };
@@ -134,10 +135,10 @@ export default function CommunityPage() {
         toast.success('Joined community successfully!');
         fetchCommunity();
       } else {
-        const error = await res.json();
-        toast.error(error.message || 'Failed to join community');
+        const errorData = await res.json();
+        toast.error(errorData.message || 'Failed to join community');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to join community');
     } finally {
       setIsJoining(false);
@@ -157,10 +158,10 @@ export default function CommunityPage() {
         toast.success('Left community successfully');
         fetchCommunity();
       } else {
-        const error = await res.json();
-        toast.error(error.message || 'Failed to leave community');
+        const errorData = await res.json();
+        toast.error(errorData.message || 'Failed to leave community');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to leave community');
     } finally {
       setIsJoining(false);
@@ -185,13 +186,14 @@ export default function CommunityPage() {
 
   const handleLike = async (e: React.MouseEvent, post: Post) => {
     e.stopPropagation();
-    if (!session?.user?.id) {
+    const userId = (session?.user as { id?: string })?.id;
+    if (!userId) {
       toast.error('Please log in to like posts');
       return;
     }
 
-    const isLiked = post.likes.includes(session.user.id);
-    const updatedPost = { ...post, likes: isLiked ? post.likes.filter(id => id !== session.user.id) : [...post.likes, session.user.id] };
+    const isLiked = post.likes.includes(userId);
+    const updatedPost = { ...post, likes: isLiked ? post.likes.filter(id => id !== userId) : [...post.likes, userId] };
 
     handlePostUpdate(updatedPost);
 
@@ -376,7 +378,7 @@ export default function CommunityPage() {
                     <Heart
                       size={16}
                       className={
-                        session?.user?.id && post.likes.includes(session.user.id)
+                        session && (session.user as { id?: string })?.id && post.likes.includes((session.user as { id: string }).id)
                           ? 'text-destructive fill-current'
                           : ''
                       }
@@ -419,6 +421,12 @@ export default function CommunityPage() {
             ...post,
             topics: post.topics || [],
             tags: post.tags || [],
+            comments: (post.comments || []) as Array<{
+              _id: string;
+              author: { _id: string; name: string; username: string; profileImage?: string };
+              text: string;
+              createdAt: string;
+            }>,
           }))}
           startIndex={selectedPostIndex}
           isOpen={isModalOpen}

@@ -1,20 +1,24 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from "@/lib/authOptions";
 import { connectToDB } from "@/lib/mongodb";
 import { User } from '@/models/User';
+import type { Session } from 'next-auth';
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const session = await getServerSession(authOptions) as Session | null;
+  const sessionUser = session?.user as { id?: string } | undefined;
+  if (!sessionUser?.id) {
     // Return empty array if not logged in
     return NextResponse.json([], { status: 200 });
   }
 
+  const userId = sessionUser.id;
+
   await connectToDB();
 
   try {
-    const currentUser = await User.findById(session.user.id).select('interests following');
+    const currentUser = await User.findById(userId).select('interests following');
     if (!currentUser) {
       return NextResponse.json([], { status: 200 });
     }

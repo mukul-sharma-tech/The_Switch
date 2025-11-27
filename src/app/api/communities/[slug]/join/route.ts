@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from "@/lib/authOptions";
 import { connectToDB } from '@/lib/mongodb';
 import { Community } from '@/models/Community';
 import { User } from '@/models/User';
+import mongoose from 'mongoose';
+import type { Session } from 'next-auth';
 
 // Join a community
 export async function POST(
@@ -11,11 +13,13 @@ export async function POST(
   context: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await context.params;
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions) as Session | null;
   
   if (!session?.user?.id) {
     return NextResponse.json({ message: 'Not Authorized' }, { status: 401 });
   }
+
+  const userId = session.user.id;
 
   await connectToDB();
 
@@ -27,17 +31,21 @@ export async function POST(
     }
 
     // Check if user is already a member
-    if (community.members.includes(session.user.id as any)) {
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+    const isAlreadyMember = community.members.some((memberId: unknown) => {
+      return (memberId as { toString(): string }).toString() === userId;
+    });
+    if (isAlreadyMember) {
       return NextResponse.json({ message: 'You are already a member of this community' }, { status: 400 });
     }
 
     // Add user to members
-    community.members.push(session.user.id as any);
+    community.members.push(userObjectId);
     community.memberCount = community.members.length;
     await community.save();
 
     // Add community to user's communities
-    await User.findByIdAndUpdate(session.user.id, {
+    await User.findByIdAndUpdate(userId, {
       $push: { communities: community._id }
     });
 

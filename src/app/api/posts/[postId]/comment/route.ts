@@ -1,5 +1,5 @@
 // import { NextRequest, NextResponse } from 'next/server';
-// import { getServerSession } from 'next-auth';
+// import { getServerSession } from 'next-auth/next';
 // import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 // import { connectToDB } from "@/lib/mongodb";
 // import { Post } from '@/models/Post';
@@ -37,7 +37,7 @@
 // }
 
 // import { NextRequest, NextResponse } from 'next/server';
-// import { getServerSession } from 'next-auth';
+// import { getServerSession } from 'next-auth/next';
 // import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 // import { connectToDB } from "@/lib/mongodb";
 // import { Post } from '@/models/Post';
@@ -89,12 +89,13 @@
 
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from "@/lib/authOptions";
 import { connectToDB } from "@/lib/mongodb";
 import { Post } from '@/models/Post';
 import { Comment } from '@/models/Comment';
 import { User } from '@/models/User';
+import type { Session } from 'next-auth';
 
 export async function POST(
   request: NextRequest,
@@ -102,10 +103,12 @@ export async function POST(
 ) {
   const { postId } = await context.params; // Unwrap the Promise
 
-  const session = await getServerSession(authOptions);
-  if (!session) {
+  const session = await getServerSession(authOptions) as Session | null;
+  if (!session?.user?.id) {
     return NextResponse.json({ message: 'Not Authorized' }, { status: 401 });
   }
+
+  const userId = (session.user as { id: string }).id;
 
   await connectToDB();
   try {
@@ -116,7 +119,7 @@ export async function POST(
 
     const newComment = new Comment({
       post: postId, // use unwrapped value
-      author: session.user?.id,
+      author: userId,
       text,
     });
     await newComment.save();

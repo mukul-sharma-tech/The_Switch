@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from "@/lib/authOptions";
 import { connectToDB } from '@/lib/mongodb';
 import { Community } from '@/models/Community';
-import { User } from '@/models/User';
+import type { Session } from 'next-auth';
 
 // Get a single community by slug
 export async function GET(
@@ -37,11 +37,13 @@ export async function PUT(
   context: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await context.params;
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions) as Session | null;
   
   if (!session?.user?.id) {
     return NextResponse.json({ message: 'Not Authorized' }, { status: 401 });
   }
+
+  const userId = session.user.id;
 
   await connectToDB();
 
@@ -53,7 +55,7 @@ export async function PUT(
     }
 
     // Check if user is the creator
-    if (community.creator.toString() !== session.user.id) {
+    if (community.creator.toString() !== userId) {
       return NextResponse.json({ message: 'Only the creator can update this community' }, { status: 403 });
     }
 
@@ -96,9 +98,9 @@ export async function PUT(
       .lean();
 
     return NextResponse.json(updatedCommunity, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating community:', error);
-    if (error.code === 11000) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {
       return NextResponse.json({ message: 'A community with this name already exists' }, { status: 400 });
     }
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
