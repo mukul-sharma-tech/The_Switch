@@ -69,4 +69,5 @@ export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   // Note: Using 'as any' is necessary due to NextAuth v4's complex type requirements
   // that don't perfectly match our callback signatures. The runtime behavior is correct.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as any;
