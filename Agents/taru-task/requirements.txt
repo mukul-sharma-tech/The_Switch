@@ -2,3 +2,4 @@ python-telegram-bot==20.6
 langchain
 langchain-google-genai
 python-dotenv
+gunicorn 
